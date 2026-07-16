@@ -1,31 +1,1231 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.37328.6 d17.14
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Console Game", "Console Game\Console Game.vcxproj", "{9B7CE2D6-EE6F-4194-9CBE-9606DCC33D05}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9B7CE2D6-EE6F-4194-9CBE-9606DCC33D05}.Debug|x64.ActiveCfg = Debug|x64
-		{9B7CE2D6-EE6F-4194-9CBE-9606DCC33D05}.Debug|x64.Build.0 = Debug|x64
-		{9B7CE2D6-EE6F-4194-9CBE-9606DCC33D05}.Debug|x86.ActiveCfg = Debug|Win32
-		{9B7CE2D6-EE6F-4194-9CBE-9606DCC33D05}.Debug|x86.Build.0 = Debug|Win32
-		{9B7CE2D6-EE6F-4194-9CBE-9606DCC33D05}.Release|x64.ActiveCfg = Release|x64
-		{9B7CE2D6-EE6F-4194-9CBE-9606DCC33D05}.Release|x64.Build.0 = Release|x64
-		{9B7CE2D6-EE6F-4194-9CBE-9606DCC33D05}.Release|x86.ActiveCfg = Release|Win32
-		{9B7CE2D6-EE6F-4194-9CBE-9606DCC33D05}.Release|x86.Build.0 = Release|Win32
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {4DD417A2-762C-420F-B8BE-521A71467066}
-	EndGlobalSection
-EndGlobal
+#include <iostream>
+#include <stdio.h>
+#include <conio.h>
+#include <windows.h>
+using namespace std;
+
+int currentLevel = 1;
+unsigned char wrld[30][200];
+
+int lastDir = 1;
+int moving = 0;
+int heroHealth = 5;
+int ebR[5], ebC[5], ebA[5], ebDir[5];
+int laserR[5], laserC[5], laserA[5], laserDir[5];
+int frame = 0;
+int onLadderMode = 0;
+
+int rH = 24;
+int cH = 5;
+int jumpCount = 0;
+int jumpDir = 0;
+int jumpTimes = 0;
+int isJumping = 0;
+int canJump = 1;
+
+int camStart = 0;
+int camEnd = 120;
+
+int bR[100], bC[100], bA[100];
+int bDir[100];
+int bType[100];
+
+// ENEMIES 
+int eR[4] = { 24, 14, 10, 20 };
+int eC[4] = { 60, 98, 150, 75 };
+int eDir[4] = { 1, -1, 1, 1 };
+int eA[4] = { 1, 1, 1, 0 };
+int eType[4] = { 0, 0, 0, 0 };
+
+int bossR = 3;
+int bossC = 155;
+int bossHealth = 5;
+int bossA = 0;
+
+
+//level 1 elevator
+
+int elevator1R = 25;
+int elevator1C = 130;
+int elevator1Dir = -1;
+int elevator1Len = 8;
+
+int doorC = 180;
+int doorR = 12;
+
+int guncheck = 0;
+
+// clouds
+int cloudc[3] = { 10, 60, 105 };
+int clouddir[3] = { 1, -1, 1 };
+
+// ============ WORLD ============
+void World()
+{
+    for (int r = 0; r < 30; r++)
+    {
+        for (int c = 0; c < 200; c++)
+        {
+            wrld[r][c] = ' ';
+        }
+    }
+}
+
+void DrawBorder()
+{
+    for (int c = 0; c < 200; c++)
+    {
+        wrld[0][c] = '*';
+        wrld[29][c] = '*';
+    }
+
+    for (int r = 0; r < 30; r++)
+    {
+        wrld[r][0] = '*';
+        wrld[r][199] = '*';
+    }
+}
+
+
+// ============ LEVEL 1 ============
+void drawclouds()
+{
+    for (int i = 0; i < 3; i++)
+    {
+        int r = 1;
+        int c = cloudc[i];
+
+        if (c >= 2 && c + 13 < 199)
+        {
+
+            wrld[r][c + 4] = '_';
+            wrld[r][c + 5] = '_';
+            wrld[r][c + 9] = '_';
+
+
+            wrld[r + 1][c + 1] = '_';
+            wrld[r + 1][c + 2] = '(';
+            wrld[r + 1][c + 5] = ')';
+            wrld[r + 1][c + 6] = '_';
+            wrld[r + 1][c + 7] = '(';
+            wrld[r + 1][c + 9] = ')';
+            wrld[r + 1][c + 10] = '_';
+
+
+            wrld[r + 2][c + 0] = '(';
+            wrld[r + 2][c + 1] = '_';
+            wrld[r + 2][c + 5] = '_';
+            wrld[r + 2][c + 10] = '_';
+            wrld[r + 2][c + 11] = ')';
+
+            wrld[r + 3][c + 2] = '(';
+            wrld[r + 3][c + 3] = '_';
+            wrld[r + 3][c + 4] = ')';
+            wrld[r + 3][c + 6] = '(';
+            wrld[r + 3][c + 7] = '_';
+            wrld[r + 3][c + 8] = '_';
+            wrld[r + 3][c + 9] = ')';
+        }
+    }
+}
+void DrawPlatformsLevel1()
+{
+    for (int c = 0; c < 200; c++)
+    {
+        wrld[28][c] = '#';
+    }
+
+    for (int c = 20; c < 60; c++)
+    {
+        wrld[22][c] = '#';
+    }
+    for (int c = 80; c < 120; c++)
+    {
+        wrld[18][c] = '#';
+    }
+    for (int c = 140; c < 180; c++)
+    {
+        wrld[14][c] = '#';
+    }
+    for (int c = 66; c < 79; c++)
+    {
+        wrld[20][c] = '#';
+    }
+}
+
+void DrawLaddersLevel1()
+{
+    for (int r = 19; r < 28; r++)
+    {
+        wrld[r][40] = '|';
+        wrld[r][41] = '-';
+        wrld[r][42] = '-';
+        wrld[r][43] = '|';
+    }
+
+    for (int r = 15; r < 28; r++)
+    {
+        wrld[r][100] = '|';
+        wrld[r][101] = '-';
+        wrld[r][102] = '-';
+        wrld[r][103] = '|';
+    }
+}
+
+// ============ LEVEL 2 ============
+
+void DrawRoom1()
+{
+
+    for (int c = 5; c < 35; c++)
+    {
+        wrld[28][c] = '#';
+    }
+
+
+    for (int c = 5; c < 35; c++)
+    {
+        wrld[22][c] = '#';
+    }
+
+
+    for (int c = 5; c < 35; c++)
+    {
+        wrld[16][c] = '#';
+    }
+
+
+    for (int c = 5; c < 35; c++)
+    {
+        wrld[10][c] = '#';
+    }
+
+
+    for (int r = 15; r < 25; r++)
+    {
+        wrld[r][5] = '|';
+    }
+
+
+    for (int r = 19; r < 28; r++)
+    {
+        wrld[r][20] = '|';
+        wrld[r][21] = '-';
+        wrld[r][22] = '-';
+        wrld[r][23] = '|';
+    }
+
+    for (int r = 13; r < 22; r++)
+    {
+        wrld[r][10] = '|';
+        wrld[r][11] = '-';
+        wrld[r][12] = '-';
+        wrld[r][13] = '|';
+    }
+
+    for (int r = 7; r < 16; r++)
+    {
+        wrld[r][25] = '|';
+        wrld[r][26] = '-';
+        wrld[r][27] = '-';
+        wrld[r][28] = '|';
+    }
+}
+
+
+void DrawRoom2()
+{
+
+    for (int c = 50; c < 110; c++)
+    {
+        wrld[24][c] = '#';
+    }
+
+
+    for (int c = 50; c < 110; c++)
+    {
+        wrld[14][c] = '#';
+    }
+
+
+    for (int r = 12; r < 24; r++)
+    {
+        wrld[r][70] = '|';
+        wrld[r][71] = '-';
+        wrld[r][72] = '-';
+        wrld[r][73] = '|';
+    }
+
+
+}
+
+
+
+
+void FireLaserTrap()
+{
+
+    if (currentLevel == 2)
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            if (laserA[i] == 0)
+            {
+                laserA[i] = 1;
+                laserR[i] = 20;
+                laserC[i] = 5;
+                laserDir[i] = 1;
+                break;
+            }
+        }
+    }
+}
+
+void MoveLaserTraps()
+{
+    for (int i = 0; i < 5; i++)
+    {
+        if (laserA[i] == 1)
+        {
+            laserC[i] += (1 * laserDir[i]);
+
+            if (laserC[i] >= 35 || laserC[i] <= 5)
+            {
+                laserA[i] = 0;
+            }
+            else
+            {
+                wrld[laserR[i]][laserC[i]] = '~';
+
+
+                if (laserR[i] >= rH && laserR[i] <= rH + 3 &&
+                    laserC[i] >= cH && laserC[i] <= cH + 3)
+                {
+                    heroHealth--;
+                    laserA[i] = 0;
+                }
+            }
+        }
+    }
+}
+
+// ============ ELEVATOR ============
+
+
+int OnElevator()
+{
+    if (currentLevel == 2 || currentLevel == 1)
+    {
+        char x = wrld[rH + 4][cH + 1];
+        if (x == '=')
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void DrawElevator1()
+{
+    for (int i = 0; i < elevator1Len; i++)
+    {
+        wrld[elevator1R][elevator1C + i] = '=';
+    }
+}
+
+void MoveElevator1()
+{
+    elevator1R += elevator1Dir;
+    if (elevator1R <= 12)
+    {
+        elevator1Dir = 1;
+    }
+    else if (elevator1R >= 27) { elevator1Dir = -1; }
+}
+
+// ============ DOOR ============
+void DrawDoor()
+{
+    if (currentLevel == 1)
+    {
+        doorC = 180;
+        doorR = 12;
+    }
+    else if (currentLevel == 2)
+    {
+        doorC = 5;
+        doorR = 10;
+    }
+
+    wrld[doorR][doorC] = 'D';
+    wrld[doorR + 1][doorC] = 'D';
+    wrld[doorR + 2][doorC] = 'D';
+}
+
+// ============ HERO ============
+void DrawHero()
+{
+    if (moving == 0)
+    {
+        wrld[rH][cH] = '(';
+        wrld[rH][cH + 1] = 'o';
+        wrld[rH][cH + 2] = 'o';
+        wrld[rH][cH + 3] = ')';
+
+        wrld[rH + 1][cH + 1] = '|';
+        wrld[rH + 1][cH + 2] = '|';
+
+        wrld[rH + 2][cH] = '/';
+        wrld[rH + 2][cH + 3] = '\\';
+
+        wrld[rH + 3][cH] = '|';
+        wrld[rH + 3][cH + 3] = '|';
+    }
+
+    // MOVING RIGHT
+    else if (lastDir == 1)
+    {
+        wrld[rH][cH] = ' ';
+        wrld[rH][cH + 1] = 'o';
+        wrld[rH][cH + 2] = ')';
+
+        wrld[rH + 1][cH] = '/';
+        wrld[rH + 1][cH + 1] = '|';
+        wrld[rH + 1][cH + 2] = '>';
+
+        wrld[rH + 2][cH] = '/';
+        wrld[rH + 2][cH + 1] = ' ';
+        wrld[rH + 2][cH + 2] = '\\';
+
+        wrld[rH + 3][cH] = '|';
+        wrld[rH + 3][cH + 3] = '|';
+    }
+
+    // MOVING LEFT
+    else
+    {
+        wrld[rH][cH] = '(';
+        wrld[rH][cH + 1] = 'o';
+        wrld[rH][cH + 2] = ' ';
+
+        wrld[rH + 1][cH] = '<';
+        wrld[rH + 1][cH + 1] = '|';
+        wrld[rH + 1][cH + 2] = '\\';
+
+        wrld[rH + 2][cH] = '/';
+        wrld[rH + 2][cH + 1] = ' ';
+        wrld[rH + 2][cH + 2] = '\\';
+
+        wrld[rH + 3][cH] = '|';
+        wrld[rH + 3][cH + 3] = '|';
+    }
+}
+
+// ============ DIFFERENT ENEMY TYPES ============
+void DrawEnemy(int r, int c, int type)
+{
+    if (type == 0)
+    {
+
+        wrld[r][c] = '.';
+        wrld[r][c + 1] = '-';
+        wrld[r][c + 2] = '.';
+
+        wrld[r + 1][c] = '(';
+        wrld[r + 1][c + 1] = '0';
+        wrld[r + 1][c + 2] = ')';
+
+        wrld[r + 2][c] = '/';
+        wrld[r + 2][c + 1] = '|';
+        wrld[r + 2][c + 2] = '\\';
+
+        wrld[r + 3][c] = '/';
+        wrld[r + 3][c + 2] = '\\';
+    }
+    else if (type == 1)
+    {
+
+        wrld[r][c] = '[';
+        wrld[r][c + 1] = '^';
+        wrld[r][c + 2] = ']';
+
+        wrld[r + 1][c] = '|';
+        wrld[r + 1][c + 1] = 'o';
+        wrld[r + 1][c + 2] = '|';
+
+        wrld[r + 2][c] = '/';
+        wrld[r + 2][c + 2] = '\\';
+    }
+    else if (type == 2)
+    {
+
+        wrld[r][c] = '<';
+        wrld[r][c + 1] = '=';
+        wrld[r][c + 2] = '>';
+
+        wrld[r + 1][c] = '|';
+        wrld[r + 1][c + 1] = 'X';
+        wrld[r + 1][c + 2] = '|';
+    }
+}
+
+// ============ BOSS ============
+void DrawBoss()
+{
+    if (currentLevel == 2 && bossA == 1)
+    {
+        if (bossR >= 0 && bossC + 7 < 200)
+        {
+            wrld[bossR][bossC + 3] = '.';
+            wrld[bossR][bossC + 4] = '\'';
+            wrld[bossR][bossC + 5] = '.';
+            wrld[bossR][bossC + 6] = '\'';
+        }
+
+        if (bossR + 1 >= 0 && bossC + 6 < 200)
+        {
+            wrld[bossR + 1][bossC + 2] = '.';
+            wrld[bossR + 1][bossC + 3] = '\'';
+            wrld[bossR + 1][bossC + 4] = '-';
+            wrld[bossR + 1][bossC + 5] = '\'';
+            wrld[bossR + 1][bossC + 6] = '.';
+        }
+
+        if (bossR + 2 >= 0 && bossC + 8 < 200)
+        {
+            wrld[bossR + 2][bossC] = '.';
+            wrld[bossR + 2][bossC + 3] = '(';
+            if (frame % 30 < 10)
+            {
+                wrld[bossR + 2][bossC + 5] = 'X';
+                wrld[bossR + 2][bossC + 7] = 'X';
+            }
+            else if (frame % 30 < 20)
+            {
+                wrld[bossR + 2][bossC + 5] = 'O';
+                wrld[bossR + 2][bossC + 7] = 'O';
+            }
+            else
+            {
+                wrld[bossR + 2][bossC + 5] = '-';
+                wrld[bossR + 2][bossC + 7] = '-';
+            }
+            wrld[bossR + 2][bossC + 8] = ')';
+        }
+
+        if (bossR + 3 >= 0 && bossC + 9 < 200)
+        {
+            wrld[bossR + 3][bossC + 2] = '\\';
+            wrld[bossR + 3][bossC + 3] = '_';
+            wrld[bossR + 3][bossC + 5] = '`';
+            wrld[bossR + 3][bossC + 8] = ',';
+        }
+
+        if (bossR + 4 >= 0 && bossC + 9 < 200)
+        {
+            wrld[bossR + 4][bossC] = '-';
+            wrld[bossR + 4][bossC + 1] = '.';
+            wrld[bossR + 4][bossC + 2] = '_';
+            wrld[bossR + 4][bossC + 3] = '_';
+            wrld[bossR + 4][bossC + 4] = '_';
+            wrld[bossR + 4][bossC + 5] = '\'';
+            wrld[bossR + 4][bossC + 6] = '.';
+            wrld[bossR + 4][bossC + 7] = ')';
+        }
+
+        if (bossR + 5 >= 0 && bossC + 12 < 200)
+        {
+            wrld[bossR + 5][bossC + 4] = '\'';
+            wrld[bossR + 5][bossC + 5] = '-';
+            wrld[bossR + 5][bossC + 6] = '.';
+
+        }
+
+        if (bossR + 6 >= 0 && bossC + 14 < 200)
+        {
+            wrld[bossR + 6][bossC + 1] = '.';
+            wrld[bossR + 6][bossC + 2] = '/';
+            wrld[bossR + 6][bossC + 3] = '\\';
+            wrld[bossR + 6][bossC + 4] = '/';
+            wrld[bossR + 6][bossC + 5] = '\\';
+            wrld[bossR + 6][bossC + 6] = '/';
+        }
+    }
+}
+
+
+void moveclouds()
+{
+    for (int i = 0; i < 3; i++)
+    {
+        cloudc[i] += clouddir[i];
+        if (cloudc[i] <= 2)
+        {
+            clouddir[i] = 1;
+        }
+        else if (cloudc[i] >= 115)
+        {
+            clouddir[i] = -1;
+        }
+    }
+}
+
+// ============ OUTPUT ============
+void output()
+{
+    system("cls");
+    cout << "HP: " << heroHealth << " | Level: " << currentLevel;
+    if (currentLevel == 2)
+    {
+        cout << " | Boss HP: " << bossHealth;
+    }
+    cout << "\n";
+
+    for (int r = 0; r < 30; r++)
+    {
+        for (int c = camStart; c < camEnd; c++)
+        {
+            cout << wrld[r][c];
+        }
+        cout << endl;
+    }
+}
+
+// ============ MOVEMENT CHECKS ============
+int CanMoveDown()
+{
+    if (rH + 4 >= 29) { return 0; }
+
+    for (int c = cH; c <= cH + 3; c++)
+    {
+        char x = wrld[rH + 4][c];
+        if (x == '#' || x == '*' || x == '=')
+        {
+            return 0;
+        }
+        if ((x == '|' || x == '-') && onLadderMode == 0)
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+int CanMoveUp()
+{
+    if (rH <= 1) { return 0; }
+
+    for (int c = cH; c <= cH + 3; c++)
+    {
+        char x = wrld[rH - 1][c];
+        if (x == '#' || x == '*')
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+int CanMoveRight()
+{
+    if (cH + 4 >= 199) { return 0; }
+
+    for (int r = rH; r <= rH + 3; r++)
+    {
+        char x = wrld[r][cH + 4];
+        if (x == '#' || x == '*' || x == '[')
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int CanMoveLeft()
+{
+    if (cH - 1 <= 0) { return 0; }
+
+    for (int r = rH; r <= rH + 3; r++)
+    {
+        char x = wrld[r][cH - 1];
+        if (x == '#' || x == '*' || x == '[')
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+int OnLadder()
+{
+    char x = wrld[rH + 2][cH + 1];
+    if (x == '|' || x == '-')
+    {
+        return 1;
+    }
+    return 0;
+}
+
+int OnElevator1()
+{
+    if (currentLevel == 1)
+    {
+        if (rH + 4 == elevator1R && cH >= elevator1C && cH <= elevator1C + elevator1Len)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+void CheckEnemyCollision()
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (eA[i] == 1)
+        {
+            if (rH >= eR[i] && rH <= eR[i] + 3 &&
+                cH >= eC[i] && cH <= eC[i] + 2)
+            {
+                heroHealth = 0;
+            }
+        }
+    }
+}
+
+// ============ BULLETS ============
+void Fire()
+{
+    for (int i = 0; i < 5; i++)
+    {
+        if (bA[i] == 0)
+        {
+            bA[i] = 1;
+            bR[i] = rH + 1;
+            bC[i] = cH + 4;
+            bDir[i] = lastDir;
+            bType[i] = 0;
+            break;
+        }
+    }
+}
+
+void FireLaser()
+{
+    for (int i = 0; i < 5; i++)
+    {
+        if (bA[i] == 0)
+        {
+            bA[i] = 1;
+            bR[i] = rH + 1;
+            bC[i] = cH + 4;
+            bDir[i] = lastDir;
+            bType[i] = 1;
+            break;
+        }
+    }
+}
+
+void MoveBullets()
+{
+    for (int i = 0; i < 5; i++)
+    {
+        if (bA[i] == 1)
+        {
+            if (bType[i] == 0)
+            {
+                bC[i] += (2 * bDir[i]);
+            }
+            else if (bType[i] == 1)
+            {
+                bC[i] += (4 * bDir[i]);
+            }
+
+            if (bC[i] >= 199 || bC[i] <= 1)
+            {
+                bA[i] = 0;
+            }
+            else if (wrld[bR[i]][bC[i]] == '#' || wrld[bR[i]][bC[i]] == '*' || wrld[bR[i]][bC[i]] == '[')
+            {
+                bA[i] = 0;
+            }
+
+            if (bA[i] == 1)
+            {
+                if (bType[i] == 0)
+                {
+                    wrld[bR[i]][bC[i]] = 'v';
+                }
+                else if (bType[i] == 1)
+                {
+                    wrld[bR[i]][bC[i]] = '=';
+                }
+
+                for (int j = 0; j < 4; j++)
+                {
+                    if (eA[j] == 1)
+                    {
+                        if (bR[i] >= eR[j] && bR[i] <= eR[j] + 3 &&
+                            bC[i] >= eC[j] && bC[i] <= eC[j] + 2)
+                        {
+                            eA[j] = 0;
+                            bA[i] = 0;
+                        }
+                    }
+                }
+
+                if (currentLevel == 2 && bossA == 1)
+                {
+                    if (bR[i] >= bossR && bR[i] <= bossR + 6 &&
+                        bC[i] >= bossC && bC[i] <= bossC + 15)
+                    {
+                        bossHealth--;
+                        bA[i] = 0;
+
+                        if (bossHealth <= 0)
+                        {
+                            bossA = 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ============ ENEMY BULLETS ============
+void EnemyFire(int pos)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        if (ebA[i] == 0)
+        {
+            ebA[i] = 1;
+            ebR[i] = eR[pos] + 1;
+            ebC[i] = eC[pos] + 1;
+            ebDir[i] = -1;
+            break;
+        }
+    }
+}
+
+void BossFire()
+{
+    if (currentLevel == 2 && bossA == 1)
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            if (ebA[i] == 0)
+            {
+                ebA[i] = 1;
+                ebR[i] = bossR + 4;
+                ebC[i] = bossC + 7;
+                ebDir[i] = -1;
+                break;
+            }
+        }
+    }
+}
+void MoveEnemyBullets()
+{
+    for (int i = 0; i < 5; i++)
+    {
+        if (ebA[i] == 1)
+        {
+
+            ebC[i] += (2 * ebDir[i]);
+
+
+            if (i % 3 == 0)
+            {
+                ebR[i]++;
+            }
+            else if (i % 3 == 1)
+            {
+                ebR[i]--;
+            }
+
+
+
+            if (ebC[i] <= 1 || ebC[i] >= 198 ||
+                ebR[i] <= 1 || ebR[i] >= 28)
+            {
+                ebA[i] = 0;
+            }
+            else
+            {
+
+                if (i % 3 == 0)
+                {
+                    wrld[ebR[i]][ebC[i]] = '*';
+                }
+                else if (i % 3 == 1)
+                {
+                    wrld[ebR[i]][ebC[i]] = 'o';
+                }
+                else
+                {
+                    wrld[ebR[i]][ebC[i]] = '@';
+                }
+
+
+                if (ebR[i] >= rH && ebR[i] <= rH + 3 &&
+                    ebC[i] >= cH && ebC[i] <= cH + 3)
+                {
+                    heroHealth--;
+                    ebA[i] = 0;
+                }
+            }
+        }
+    }
+}
+// ============ ENEMY MOVEMENT ============
+void MoveEnemy()
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (eA[i] == 1)
+        {
+            if (eType[i] == 0)
+            {
+
+                int m = eC[i] + eDir[i];
+
+                if (m <= 1 || m >= 196)
+                {
+                    eDir[i] *= -1;
+                }
+                else if (wrld[eR[i] + 4][m + 1] != '#')
+                {
+                    eDir[i] *= -1;
+                }
+                else
+                {
+                    eC[i] = m;
+                }
+            }
+            else if (eType[i] == 1)
+            {
+
+                eC[i] += eDir[i];
+
+                if (eC[i] <= 1 || eC[i] >= 196)
+                {
+                    eDir[i] *= -1;
+                }
+            }
+            else if (eType[i] == 2)
+            {
+
+                if (frame % 35 == 0)
+                {
+                    EnemyFire(i);
+                }
+            }
+
+            DrawEnemy(eR[i], eC[i], eType[i]);
+            frame++;
+
+            if (frame % 40 == 0 && eType[i] == 0)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    if (eA[j] == 1 && eType[j] == 0)
+                    {
+                        EnemyFire(j);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ============ BOSS MOVEMENT ============
+void MoveBoss()
+{
+    if (currentLevel == 2 && bossA == 1)
+    {
+        if (bossC < cH - 5)
+        {
+            bossC++;
+        }
+        else if (bossC > cH + 5)
+        {
+            bossC--;
+        }
+
+        DrawBoss();
+        frame++;
+
+        if (frame % 25 == 0)
+        {
+            BossFire();
+        }
+    }
+}
+
+
+void InitLevel1()
+{
+    rH = 24;
+    cH = 5;
+    jumpCount = 0;
+    jumpDir = 0;
+    heroHealth = 5;
+    doorC = 180;
+    doorR = 12;
+
+
+    eType[0] = 0;
+    eType[1] = 1;
+    eType[2] = 0;
+    eType[3] = 0;
+
+    for (int i = 0; i < 4; i++)
+    {
+        eA[i] = (i < 3) ? 1 : 0;
+    }
+
+    for (int i = 0; i < 5; i++)
+    {
+        bA[i] = 0;
+        ebA[i] = 0;
+        laserA[i] = 0;
+
+    }
+    cloudc[0] = 10;
+    cloudc[1] = 60;
+    cloudc[2] = 105;
+    clouddir[0] = 1;
+    clouddir[1] = -1;
+    clouddir[2] = 1;
+}
+
+void InitLevel2()
+{
+    rH = 24;
+    cH = 5;
+    jumpCount = 0;
+    jumpDir = 0;
+    doorC = 5;
+    doorR = 10;
+    bossA = 1;
+    bossHealth = 5;
+    bossC = 170;
+    bossR = 5;
+
+
+    for (int i = 0; i < 4; i++)
+    {
+        eA[i] = 0;
+    }
+
+    for (int i = 0; i < 5; i++)
+    {
+        bA[i] = 0;
+        ebA[i] = 0;
+        laserA[i] = 0;
+    }
+}
+
+// ============ MAIN ============
+void main()
+{
+    char key;
+    int gameRunning = 1;
+
+    for (int i = 0; i < 5; i++)
+    {
+        bA[i] = 0;
+        bC[i] = 0;
+        bR[i] = 0;
+        bDir[i] = 0;
+        bType[i] = 0;
+        ebA[i] = 0;
+        ebC[i] = 0;
+        ebR[i] = 0;
+        ebDir[i] = 0;
+        laserA[i] = 0;
+        laserC[i] = 0;
+        laserR[i] = 0;
+        laserDir[i] = 0;
+    }
+
+    InitLevel1();
+
+    for (int i = 0; gameRunning == 1; i++)
+    {
+        World();
+        DrawBorder();
+
+        if (currentLevel == 1)
+        {
+            DrawPlatformsLevel1();
+            DrawLaddersLevel1();
+            MoveEnemy();
+            DrawElevator1();
+            MoveElevator1();
+
+        }
+        else if (currentLevel == 2)
+        {
+            DrawRoom1();
+            DrawRoom2();
+
+
+            MoveBoss();
+            FireLaserTrap();
+            MoveLaserTraps();
+        }
+
+        MoveBullets();
+        MoveEnemyBullets();
+        DrawDoor();
+        DrawHero();
+        drawclouds();
+        moveclouds();
+        CheckEnemyCollision();
+        if (OnLadder() == 0)
+        {
+            onLadderMode = 0;
+        }
+        output();
+        if (jumpCount == 0 && OnElevator() == 0 && OnElevator1() == 0 && onLadderMode == 0 && CanMoveDown())
+        {
+            rH++;
+        }
+        else if (jumpCount == 0 && !CanMoveDown())
+        {
+            canJump = 1;
+        }
+
+        if (OnElevator1() == 1)
+        {
+            rH += elevator1Dir;
+        }
+
+        if (jumpCount > 0)
+        {
+            if (CanMoveUp())
+            {
+                rH--;
+
+                if (jumpDir == 1 && cH < 195 && CanMoveRight())
+                {
+                    cH++;
+                }
+
+                if (jumpDir == -1 && cH > 1 && CanMoveLeft())
+                {
+                    cH--;
+                }
+
+                jumpCount--;
+            }
+            else
+            {
+                jumpCount = 0;
+            }
+        }
+
+        camStart = cH - 40;
+        camEnd = camStart + 120;
+        if (camStart < 0) { camStart = 0; }
+        if (camEnd > 200) { camEnd = 200; }
+
+        Sleep(60);
+
+        moving = 0;
+        if (_kbhit())
+        {
+            key = _getch();
+            if (key == 'a' && cH > 1 && CanMoveLeft())
+            {
+                cH--;
+                lastDir = -1;
+                moving = 1;
+            }
+
+            if (key == 'd' && cH < 195 && CanMoveRight())
+            {
+                cH++;
+                lastDir = 1;
+                moving = 1;
+            }
+
+            if (key == 'w')
+            {
+                char x = wrld[rH + 2][cH + 1];
+                if ((x == '|' || x == '-') && CanMoveUp())
+                {
+                    onLadderMode = 1;
+                    rH--;
+                }
+            }
+            if (key == 's')
+            {
+                char x = wrld[rH + 2][cH + 1];
+                if (x == '|' || x == '-')
+                {
+                    onLadderMode = 1;
+                    rH++;
+                }
+            }
+
+            if (key == 'e' && canJump == 1 && OnLadder() == 0 && OnElevator() == 0 && OnElevator1() == 0)
+            {
+                jumpCount = 6;
+                jumpDir = 1;
+                canJump = 0;
+            }
+            if (key == 'q' && jumpCount == 0 && OnLadder() == 0 && OnElevator() == 0)
+            {
+                jumpCount = 6;
+                jumpDir = -1;
+            }
+
+            if (key == 'f')
+            {
+                Fire();
+            }
+
+            if (key == 'l')
+            {
+                FireLaser();
+            }
+
+            if (key == 'x')
+            {
+                gameRunning = 0;
+            }
+        }
+
+        if (rH >= doorR && rH <= doorR + 2 && cH >= doorC - 2 && cH <= doorC + 2)
+        {
+            if (currentLevel == 1)
+            {
+                currentLevel = 2;
+                InitLevel2();
+            }
+            else if (currentLevel == 2)
+            {
+                if (bossA == 0)
+                {
+                    system("cls");
+                    cout << "========================================\n";
+                    cout << "        YOU WIN! BOSS DEFEATED!\n";
+                    cout << "========================================\n";
+                    gameRunning = 0;
+                }
+            }
+        }
+
+        if (heroHealth <= 0)
+        {
+            system("cls");
+            cout << "========================================\n";
+            cout << "     GAME OVER - DEFEATED!\n";
+            cout << "========================================\n";
+            gameRunning = 0;
+        }
+    }
+}
